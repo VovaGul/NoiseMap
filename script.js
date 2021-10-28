@@ -97,6 +97,8 @@ class MapFeatureRepository {
     var popupHTML = ''
     if (feature.type === FeatureType.unchecked) {
       popupHTML = popupHTML + acceptButtonHTML + rejectButtonHTML
+    } else if (feature.type === FeatureType.checked) {
+      popupHTML = popupHTML + rejectButtonHTML
     }
     popupHTML =  popupHTML + deleteButtonHTML
 
@@ -190,11 +192,21 @@ class MapboxManager {
   }
 
   acceptCurrentFeature() {
-    
+    const oldCurrnetFeature = currentFeature
+    this.featureRepository.deleteFeature(currentFeature)
+
+    oldCurrnetFeature.type = FeatureType.checked
+
+    this.featureRepository.setFeature(oldCurrnetFeature)
   }
 
   rejectCurrentFeature() {
+    const oldCurrnetFeature = currentFeature
+    this.featureRepository.deleteFeature(currentFeature)
 
+    oldCurrnetFeature.type = FeatureType.empty
+
+    this.featureRepository.setFeature(oldCurrnetFeature)
   }
 
   deleteCurrentFeature() {
