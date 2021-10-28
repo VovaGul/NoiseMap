@@ -1,3 +1,6 @@
+var currentFeature
+var currentMarker
+
 class FeatureType {
   static empty = "Empty"
   static unchecked = "Unchecked"
@@ -61,8 +64,6 @@ class ServerFeatureRepository {
 }
 
 class MapFeatureRepository {
-  static currentMarker
-
   constructor(map, mapboxManager) {
     this.map = map
     this.mapboxManager = mapboxManager
@@ -85,24 +86,31 @@ class MapFeatureRepository {
       .Marker(markerElement);
 
     markerElement.addEventListener('click', function () {
-      MapboxManager.currentFeature = feature
-      MapFeatureRepository.currentMarker = marker
+      currentFeature = feature
+      currentMarker = marker
     });
+
+    const acceptButtonHTML = '<h3><button type="button" onclick="acceptCurrentFeature()">Принять</button></h3>'
+    const rejectButtonHTML = '<h3><button type="button" onclick="rejectCurrentFeature()">Отклонить</button></h3>'
+    const deleteButtonHTML = '<h3><button type="button" onclick="deleteCurrentFeature()">Удалить</button></h3>'
+
+    var popupHTML = ''
+    if (feature.type === FeatureType.unchecked) {
+      popupHTML = popupHTML + acceptButtonHTML + rejectButtonHTML
+    }
+    popupHTML =  popupHTML + deleteButtonHTML
 
     marker
       .setLngLat(feature.geometry.coordinates)
       .setPopup(
         new mapboxgl.Popup({ offset: 25 }) // add popups
-          .setHTML(
-            '<h3><button type="button" onclick="deleteCurrentFeature()">Удалить</button></h3>'
-            // `<h3>${feature.properties.title}</h3><p>${feature.properties.description}</p>`
-          )
+          .setHTML(popupHTML)
       )
       .addTo(this.map);
   }
 
   deleteCurrentMarker() {
-    MapFeatureRepository.currentMarker.remove()
+    currentMarker.remove()
   }
 }
 
@@ -125,8 +133,6 @@ class FeatureRepository {
 
 
 class MapboxManager {
-  static currentFeature
-
   constructor(serverFeatureRepository) {
     this.serverFeatureRepository = serverFeatureRepository
   }
@@ -183,8 +189,16 @@ class MapboxManager {
     });
   }
 
+  acceptCurrentFeature() {
+    
+  }
+
+  rejectCurrentFeature() {
+
+  }
+
   deleteCurrentFeature() {
-    this.featureRepository.deleteFeature(MapboxManager.currentFeature)
+    this.featureRepository.deleteFeature(currentFeature)
   }
 }
 
@@ -194,9 +208,16 @@ const mapboxManager = new MapboxManager(serverFeatureRepository)
 
 mapboxManager.run()
 
-
 function setEmptyFeature() {
   mapboxManager.setEmptyFeature()
+}
+
+function acceptCurrentFeature() {
+  mapboxManager.acceptCurrentFeature()
+}
+
+function rejectCurrentFeature() {
+  mapboxManager.rejectCurrentFeature()
 }
 
 function deleteCurrentFeature() {
