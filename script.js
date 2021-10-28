@@ -44,7 +44,7 @@ class MapFeatureRepository{
   setFeature(feature){
     // create a HTML element for each feature
     const el = document.createElement('div');
-    el.className = 'emptyPoint';
+    el.className = 'empty-point';
 
     // make a marker for each feature and add to the map
     new mapboxgl.Marker(el).setLngLat(feature.geometry.coordinates).addTo(this.map);
@@ -93,12 +93,16 @@ class MapboxManager{
       zoom: 3
     });
 
-    this.map.getCanvas().style.cursor = 'pointer';
-
     const mapFeatureRepository = new MapFeatureRepository(this.map)
     this.featureRepository = new FeatureRepository(this.serverFeatureRepository, mapFeatureRepository)
+  }
 
-    this.map.on('click', (e) => {
+  setEmptyFeature(){
+    const oldCursor = this.map.getCanvas().style.cursor
+    
+    this.map.getCanvas().style.cursor = 'pointer';
+
+    this.map.once('click', (e) => {
       const feature = {
         type: 'Feature',
         geometry: {
@@ -112,6 +116,7 @@ class MapboxManager{
       };
     
       this.featureRepository.setFeature(feature)
+      this.map.getCanvas().style.cursor = oldCursor;
     });
   }
 }
@@ -121,3 +126,8 @@ const serverFeatureRepository = new ServerFeatureRepository()
 const mapboxManager = new MapboxManager(serverFeatureRepository)
 
 mapboxManager.run()
+
+
+function setEmptyFeature(){
+  mapboxManager.setEmptyFeature()
+}
