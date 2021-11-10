@@ -9,43 +9,21 @@ class FeatureType {
 
 class ServerFeatureRepository {
   resource = {
-    type: 'FeatureCollection',
     features: [
       {
-        type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: [-77.032, 38.913]
-        },
-        properties: {
-          title: 'Mapbox',
-          description: 'Washington, D.C.'
-        },
-        type: FeatureType.empty
+        coordinates: [-77.032, 38.913],
+        type: FeatureType.empty,
+        audioLink: null
       },
       {
-        type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: [-122.414, 37.776]
-        },
-        properties: {
-          title: 'Mapbox',
-          description: 'San Francisco, California'
-        },
-        type: FeatureType.unchecked
+        coordinates: [-122.414, 37.776],
+        type: FeatureType.unchecked,
+        audioLink: "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3"
       },
       {
-        type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: [-122.414, 40.776]
-        },
-        properties: {
-          title: 'Mapbox',
-          description: 'San Francisco, California'
-        },
-        type: FeatureType.checked
+        coordinates: [-122.414, 40.776],
+        type: FeatureType.checked,
+        audioLink: "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3"
       }
     ]
   };
@@ -90,20 +68,21 @@ class MapFeatureRepository {
       currentMarker = marker
     });
 
+    const listenButtonHTML = '<h3><button type="button" onclick="listenCurrentFeature()">Прослушать</button></h3>'
     const acceptButtonHTML = '<h3><button type="button" onclick="acceptCurrentFeature()">Принять</button></h3>'
     const rejectButtonHTML = '<h3><button type="button" onclick="rejectCurrentFeature()">Отклонить</button></h3>'
     const deleteButtonHTML = '<h3><button type="button" onclick="deleteCurrentFeature()">Удалить</button></h3>'
 
     var popupHTML = ''
     if (feature.type === FeatureType.unchecked) {
-      popupHTML = popupHTML + acceptButtonHTML + rejectButtonHTML
+      popupHTML = popupHTML + listenButtonHTML + acceptButtonHTML + rejectButtonHTML
     } else if (feature.type === FeatureType.checked) {
-      popupHTML = popupHTML + rejectButtonHTML
+      popupHTML = popupHTML + listenButtonHTML + rejectButtonHTML
     }
     popupHTML =  popupHTML + deleteButtonHTML
 
     marker
-      .setLngLat(feature.geometry.coordinates)
+      .setLngLat(feature.coordinates)
       .setPopup(
         new mapboxgl.Popup({ offset: 25 }) // add popups
           .setHTML(popupHTML)
@@ -144,7 +123,7 @@ class MapboxManager {
     const features = this.serverFeatureRepository.getAll()
 
     for (const feature of features) {
-      this.featureRepository.setFeature(feature)
+      this.mapFeatureRepository.setFeature(feature)
     }
   }
 
@@ -163,8 +142,8 @@ class MapboxManager {
       zoom: 3
     });
 
-    const mapFeatureRepository = new MapFeatureRepository(this.map, this)
-    this.featureRepository = new FeatureRepository(this.serverFeatureRepository, mapFeatureRepository)
+    this.mapFeatureRepository = new MapFeatureRepository(this.map, this)
+    this.featureRepository = new FeatureRepository(this.serverFeatureRepository, this.mapFeatureRepository)
   }
 
   setEmptyFeature() {
@@ -174,21 +153,18 @@ class MapboxManager {
 
     this.map.once('click', (e) => {
       const feature = {
-        type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: [e.lngLat.lng, e.lngLat.lat]
-        },
-        properties: {
-          title: 'Mapbox',
-          description: 'Washington, D.C.'
-        },
+        coordinates: [e.lngLat.lng, e.lngLat.lat],
         type: FeatureType.empty
       };
 
       this.featureRepository.setFeature(feature)
       this.map.getCanvas().style.cursor = oldCursor;
     });
+  }
+
+  listenCurrentFeature() {
+    var audio = new Audio(currentFeature.audioLink); 
+    audio.play(); 
   }
 
   acceptCurrentFeature() {
@@ -222,6 +198,11 @@ mapboxManager.run()
 
 function setEmptyFeature() {
   mapboxManager.setEmptyFeature()
+}
+
+
+function listenCurrentFeature() {
+  mapboxManager.listenCurrentFeature()
 }
 
 function acceptCurrentFeature() {
